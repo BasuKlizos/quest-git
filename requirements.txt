@@ -1,0 +1,1 @@
+-e git+https://github.com/BasuKlizos/quest-git.git@df74fbec78fea7e99a7fa653681ffbe9cfca11a6#egg=questgit

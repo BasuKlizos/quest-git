@@ -1,5 +1,8 @@
 from cli.commands import CLIHandler
 
-if __name__ == "__main__":
+def main():
     cli = CLIHandler()
     cli.run()
+
+if __name__ == "__main__":
+    main()
