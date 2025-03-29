@@ -28,12 +28,12 @@ class LoggerUtil:
         file_handler.setLevel(logging.DEBUG)
 
         # Display
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(log_format)
-        console_handler.setLevel(logging.INFO)
+        # console_handler = logging.StreamHandler()
+        # console_handler.setFormatter(log_format)
+        # console_handler.setLevel(logging.INFO)
 
         if not logger.hasHandlers():  # Prevent duplicate handlers
             logger.addHandler(file_handler)
-            logger.addHandler(console_handler)
+            # logger.addHandler(console_handler)
 
         return logger

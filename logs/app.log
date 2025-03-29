@@ -1,0 +1,8 @@
+2025-03-30 01:32:47,759 - ERROR - questgit.repository - Error: Repository already initialized.
+2025-03-30 01:33:18,741 - INFO - utils.file_utils - Directory ensured: .questgit\objects
+2025-03-30 01:33:18,742 - INFO - utils.file_utils - Directory ensured: .questgit\refs
+2025-03-30 01:33:18,742 - INFO - utils.file_utils - Directory ensured: .questgit\refs\heads
+2025-03-30 01:33:18,743 - INFO - utils.file_utils - File ensured: .questgit\index
+2025-03-30 01:33:18,743 - INFO - utils.file_utils - Successfully worte to file: .questgit\HEAD
+2025-03-30 01:33:18,743 - INFO - utils.file_utils - Successfully worte to file: .questgit\refs\heads\master
+2025-03-30 01:33:18,743 - INFO - questgit.repository - Initialized empty questgit repository
