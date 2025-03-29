@@ -22,7 +22,7 @@ class FileHandler:
     @staticmethod
     def write(filepath, content):
         try:
-            with open(filepath, "w") as f:
+            with open(filepath, "w", encoding="utf-8") as f:
                 f.write(content)
             logger.info(f"Successfully worte to file: {filepath}")
         except IOError as e:
@@ -31,7 +31,7 @@ class FileHandler:
     @staticmethod
     def append(filepath, content):
         try:
-            with open(filepath, "a") as f:
+            with open(filepath, "a", encoding="utf-8") as f:
                 f.write(content, "\n")
             logger.info(f"Successfully appended to file: {filepath}")
         except IOError as e:
@@ -44,3 +44,11 @@ class FileHandler:
             logger.info(f"Directory ensured: {directory}")
         except OSError as e:
             logger.error(f"Error creating directory {directory}: {e}")
+
+    @staticmethod
+    def ensure_filepath_exists(filepath):
+        try:
+            open(filepath, "a").close()
+            logger.info(f"File ensured: {filepath}")
+        except IOError as e:
+            logger.error(f"Error ensuring file {filepath}: {e}")

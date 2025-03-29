@@ -1,7 +1,21 @@
 import os
 import shutil
 
+from utils.logger_utils import LoggerUtil
+from utils.constants import (
+    GIT_DIR,
+    OBJECTS_DIR,
+    REFS_DIR,
+    HEADS_DIR,
+    INDEX_FILE,
+    HEAD_FILE,
+    MASTER_FILE,
+)
+
 # from pathlib import Path
+
+
+logger = LoggerUtil.setup_logger(__name__)
 
 
 class Repository:
@@ -21,14 +35,14 @@ class Repository:
     #     cls.INDEX_FILE.touch()
 
     #     cls.HEAD_FILE.write_text("ref: refs/master\n")
-    GIT_DIR = ".questgit"
-    TEMP_GIT_DIR = ".temp-questgit"
-    OBJECTS_DIR = os.path.join(TEMP_GIT_DIR, "objects")
-    REFS_DIR = os.path.join(TEMP_GIT_DIR, "refs")
-    HEADS_DIR = os.path.join(REFS_DIR, "heads")
-    INDEX_FILE = os.path.join(TEMP_GIT_DIR, "index")
-    HEAD_FILE = os.path.join(TEMP_GIT_DIR, "HEAD")
-    MASTER_FILE = os.path.join(HEADS_DIR, "master")
+    # GIT_DIR = ".questgit"
+    # TEMP_GIT_DIR = ".temp-questgit"
+    # OBJECTS_DIR = os.path.join(TEMP_GIT_DIR, "objects")
+    # REFS_DIR = os.path.join(TEMP_GIT_DIR, "refs")
+    # HEADS_DIR = os.path.join(REFS_DIR, "heads")
+    # INDEX_FILE = os.path.join(TEMP_GIT_DIR, "index")
+    # HEAD_FILE = os.path.join(TEMP_GIT_DIR, "HEAD")
+    # MASTER_FILE = os.path.join(HEADS_DIR, "master")
 
     @classmethod
     def init(cls):
