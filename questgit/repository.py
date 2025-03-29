@@ -25,10 +25,10 @@ class Repository:
     TEMP_GIT_DIR = ".temp-questgit"
     OBJECTS_DIR = os.path.join(TEMP_GIT_DIR, "objects")
     REFS_DIR = os.path.join(TEMP_GIT_DIR, "refs")
-    # HEADS_DIR = os.path.join(REFS_DIR, "heads")
+    HEADS_DIR = os.path.join(REFS_DIR, "heads")
     INDEX_FILE = os.path.join(TEMP_GIT_DIR, "index")
     HEAD_FILE = os.path.join(TEMP_GIT_DIR, "HEAD")
-    MASTER_FILE = os.path.join(TEMP_GIT_DIR, "master")
+    MASTER_FILE = os.path.join(HEADS_DIR, "master")
 
     @classmethod
     def init(cls):
@@ -39,6 +39,7 @@ class Repository:
 
             os.makedirs(cls.OBJECTS_DIR, exist_ok=True)
             os.makedirs(cls.REFS_DIR, exist_ok=True)
+            os.makedirs(cls.HEADS_DIR, exist_ok=True)
 
             open(cls.INDEX_FILE, "a").close()
 
@@ -51,7 +52,7 @@ class Repository:
             os.rename(cls.TEMP_GIT_DIR, cls.GIT_DIR)
             print("Initialized empty questgit repository")
 
-        except (FileExistsError,  PermissionError) as fp:
+        except (FileExistsError, PermissionError) as fp:
             print(f"File exist error: {fp}")
             shutil.rmtree(cls.TEMP_GIT_DIR, ignore_errors=True)
         except Exception as e:
