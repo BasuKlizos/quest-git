@@ -1,4 +1,5 @@
 import os
+import shutil
 
 # from pathlib import Path
 
@@ -21,11 +22,13 @@ class Repository:
 
     #     cls.HEAD_FILE.write_text("ref: refs/master\n")
     GIT_DIR = ".questgit"
-    OBJECTS_DIR = os.path.join(GIT_DIR, "objects")
-    REFS_DIR = os.path.join(GIT_DIR, "refs")
-    INDEX_FILE = os.path.join(GIT_DIR, "index")
-    HEAD_FILE = os.path.join(REFS_DIR, "HEAD")
-    MASTER_FILE = os.path.join(REFS_DIR, "master")
+    TEMP_GIT_DIR = ".temp-questgit"
+    OBJECTS_DIR = os.path.join(TEMP_GIT_DIR, "objects")
+    REFS_DIR = os.path.join(TEMP_GIT_DIR, "refs")
+    # HEADS_DIR = os.path.join(REFS_DIR, "heads")
+    INDEX_FILE = os.path.join(TEMP_GIT_DIR, "index")
+    HEAD_FILE = os.path.join(TEMP_GIT_DIR, "HEAD")
+    MASTER_FILE = os.path.join(TEMP_GIT_DIR, "master")
 
     @classmethod
     def init(cls):
@@ -42,10 +45,15 @@ class Repository:
             with open(cls.HEAD_FILE, "w") as f_data:
                 f_data.write("ref: refs/master\n")
 
+            with open(cls.MASTER_FILE, "w") as m_data:
+                m_data.write("")
+
+            os.rename(cls.TEMP_GIT_DIR, cls.GIT_DIR)
             print("Initialized empty questgit repository")
-        except FileExistsError as fe:
-            print(f"File exist error: {fe}")
-        except PermissionError as p:
-            print(f"Error: Permission denied. Try running as administrator.\nerror:{p}")
+
+        except (FileExistsError,  PermissionError) as fp:
+            print(f"File exist error: {fp}")
+            shutil.rmtree(cls.TEMP_GIT_DIR, ignore_errors=True)
         except Exception as e:
-            print("Unexpected error: {e}")
+            print(f"Unexpected error: {e}")
+            shutil.rmtree(cls.TEMP_GIT_DIR, ignore_errors=True)

@@ -24,7 +24,7 @@ class CLIHandler:
         Repository.init()
 
     def show_usage(self):
-        print("Usage: python -m cli.main <command>")
+        print("Usage: questgit <command>")
         print("Available commands:")
         for cmd in self.commands.keys():
             print(f"  - {cmd}")
