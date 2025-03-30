@@ -17,6 +17,8 @@ class CLIHandler:
             "init": self.init_repo,
             "add": self.add_files,
             "status": self.show_status,
+            "restore": self.restore_staged,
+            "unstage": self.unstage,
         }
 
     def run(self):
@@ -113,8 +115,84 @@ class CLIHandler:
         for file in sorted(all_files - tracked_files):
             print(f"\033[91m  untracked: {file}\033[0m")
 
+    def restore_staged(self):
+        if not Repository.is_initialized():
+            print("Not a questgit repository")
+            return
+
+        index = Index()
+        working_dir = Repository.get_working_dir()
+
+        if not index.entries:
+            print("No files in staging area")
+            return
+
+        files_to_restore = sys.argv[3:] if len(sys.argv) > 3 else None
+
+        restored_files = 0
+        for filepath, blob_hash in index.entries.items():
+            if files_to_restore and filepath not in files_to_restore:
+                continue
+
+            try:
+                content = ObjectStore.read_blob(blob_hash)
+                if content is None:
+                    print(f"Warning: Could not read blob for {filepath}")
+                    continue
+
+                abs_path = os.path.join(working_dir, filepath)
+                FileHandler.write(abs_path, content)
+                print(f"Restored {filepath}")
+                restored_files += 1
+
+            except Exception as e:
+                logger.error(f"Error restoring {filepath}: {e}")
+
+        if restored_files > 0:
+            print(f"Restored {restored_files} file(s) from staging area")
+        else:
+            print("No files restored")
+
+    def unstage(self):
+        if not Repository.is_initialized():
+            print("Not a questgit repository")
+            return
+
+        if len(sys.argv) < 3:
+            print("Usage: questgit unstage <file1> [<file2> ...]")
+            return
+
+        index = Index()
+        files_to_unstage = sys.argv[2:]
+        working_dir = Repository.get_working_dir()
+
+        removed_files = 0
+        for filepath in files_to_unstage:
+            if os.path.isabs(filepath):
+                rel_path = Repository.get_relative_path(filepath, working_dir)
+            else:
+                rel_path = filepath
+
+            if rel_path in index.entries:
+                index.remove_entry(rel_path)
+                print(f"Removed {rel_path} from staging area")
+                removed_files += 1
+            else:
+                print(f"File not in staging area: {rel_path}")
+
+        if removed_files > 0:
+            index.save()
+            print(f"Removed {removed_files} file(s) from staging area")
+        else:
+            print("No files removed from staging area")
+
     def show_usage(self):
         print("Usage: questgit <command>")
         print("Available commands:")
-        for cmd in self.commands.keys():
-            print(f"  - {cmd}")
+        # for cmd in self.commands.keys():
+        #     print(f"  - {cmd}")
+        print("  init       - Initialize new repository")
+        print("  add        - Add files to staging area")
+        print("  status     - Show staging status")
+        print("  restore    - Restore files from staging area")
+        print("  unstage    - Remove files from staging area")

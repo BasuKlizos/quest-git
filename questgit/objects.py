@@ -1,6 +1,6 @@
 import zlib
 import os
-from typing import Optional
+from typing import Optional, List, Dict
 
 from utils.logger_utils import LoggerUtil
 from utils.file_utils import FileHandler
