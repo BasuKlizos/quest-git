@@ -1,5 +1,6 @@
 import sys
 import os
+from typing import Set
 
 from questgit.repository import Repository
 from questgit.index import Index
@@ -9,6 +10,7 @@ from utils.hash_utils import HashCalculate
 from utils.logger_utils import LoggerUtil
 from questgit.config import Config
 from questgit.commit import Commit
+from utils.constants import MASTER_FILE
 
 logger = LoggerUtil.setup_logger(__name__)
 
@@ -100,6 +102,27 @@ class CLIHandler:
             print("Nothing to stage")
 
     # For status command
+    # def show_status(self):
+    #     if not Repository.is_initialized():
+    #         print("Not a questgit repository")
+    #         return
+
+    #     index = Index()
+    #     working_dir = Repository.get_working_dir()
+    #     tracked_files = set(index.entries.keys())
+    #     all_files = set(
+    #         Repository.get_relative_path(f, working_dir)
+    #         for f in Repository.find_files()
+    #     )
+
+    #     print("Tracked files:")
+    #     for file in sorted(tracked_files):
+    #         status = "modified" if file in all_files else "deleted"
+    #         print(f"\033[92m  {status}: {file}\033[0m")
+
+    #     print("\nUntracked files:")
+    #     for file in sorted(all_files - tracked_files):
+    #         print(f"\033[91m  untracked: {file}\033[0m")
     def show_status(self):
         if not Repository.is_initialized():
             print("Not a questgit repository")
@@ -107,20 +130,55 @@ class CLIHandler:
 
         index = Index()
         working_dir = Repository.get_working_dir()
-        tracked_files = set(index.entries.keys())
-        all_files = set(
+
+        # Get all files in working directory (relative paths)
+        all_files = {
             Repository.get_relative_path(f, working_dir)
             for f in Repository.find_files()
-        )
+        }
 
-        print("Tracked files:")
+        # Tracked files = currently staged in index
+        tracked_files = set(index.entries.keys())
+
+        # Previously committed files (from last commit's tree)
+        last_commit_files = set()
+        if os.path.exists(MASTER_FILE):
+            last_commit_hash = FileHandler.read(MASTER_FILE).strip()
+            if last_commit_hash:
+                last_commit_files = self._get_files_from_commit(last_commit_hash)
+
+        print("Changes to be committed:")
+        # Show files staged in index (new/changed since last commit)
         for file in sorted(tracked_files):
-            status = "modified" if file in all_files else "deleted"
-            print(f"\033[92m  {status}: {file}\033[0m")
+            if file in last_commit_files:
+                print(f"\033[92m  modified: {file}\033[0m")  # Changed since last commit
+            else:
+                print(f"\033[92m  new file: {file}\033[0m")  # Never committed before
 
         print("\nUntracked files:")
+        # Show files not staged at all
         for file in sorted(all_files - tracked_files):
             print(f"\033[91m  untracked: {file}\033[0m")
+
+        print("\nDeleted files:")
+        # Show files committed before but now missing
+        for file in sorted(last_commit_files - all_files):
+            print(f"\033[93m  deleted: {file}\033[0m")
+
+    def _get_files_from_commit(self, commit_hash: str) -> set:
+        commit = ObjectStore.read_blob(commit_hash)
+        if not commit:
+            return set()
+
+        # Get tree hash from commit (first line: "tree <hash>")
+        tree_hash = commit.split("\n")[0].split()[1]
+        tree = ObjectStore.read_blob(tree_hash)
+
+        return {
+            line.split()[-1]  # Extract filename
+            for line in tree.split("\n")
+            if line.strip()
+        }
 
     # For Restore command from staging area
     def restore_staged(self):
