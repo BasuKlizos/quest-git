@@ -5,3 +5,5 @@ __pycache__/
 .questgit
 
 questgit.egg-info
+
+test/
