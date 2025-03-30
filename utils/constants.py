@@ -8,4 +8,7 @@ HEADS_DIR = os.path.join(REFS_DIR, "heads")
 HEAD_FILE = os.path.join(GIT_DIR, "HEAD")
 MASTER_FILE = os.path.join(HEADS_DIR, "master")
 
+BLOB_DIR_LEN = 2
+BLOB_HASH_LEN = 38
+
 REQUIRED_DIRS = [OBJECTS_DIR, REFS_DIR, HEADS_DIR]

@@ -1,5 +1,5 @@
 import hashlib
-from logger_utils import LoggerUtil
+from utils.logger_utils import LoggerUtil
 
 logger = LoggerUtil.setup_logger(__name__)
 

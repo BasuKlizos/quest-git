@@ -1,4 +1,6 @@
 import os
+from typing import Optional
+
 from utils.logger_utils import LoggerUtil
 
 
@@ -8,7 +10,7 @@ logger = LoggerUtil.setup_logger(__name__)
 class FileHandler:
 
     @staticmethod
-    def read(filepath):
+    def read(filepath: str) -> Optional[str]:
         if not os.path.isfile(filepath):
             logger.warning(f"File not found: {filepath}")
             return None
@@ -20,9 +22,30 @@ class FileHandler:
             return None
 
     @staticmethod
-    def write(filepath, content):
+    def read_binary(filepath: str) -> Optional[bytes]:
+        if not os.path.isfile(filepath):
+            logger.warning(f"File not found: {filepath}")
+            return None
+        try:
+            with open(filepath, "rb") as f:
+                return f.read()
+        except IOError as e:
+            logger.error(f"Error reading file {filepath}: {e}")
+            return None
+
+    @staticmethod
+    def write(filepath: str, content: str):
         try:
             with open(filepath, "w", encoding="utf-8") as f:
+                f.write(content)
+            logger.info(f"Successfully worte to file: {filepath}")
+        except IOError as e:
+            logger.error(f"Error writing to file {filepath}: {e}")
+
+    @staticmethod
+    def write_binary(filepath: str, content: str):
+        try:
+            with open(filepath, "wb") as f:
                 f.write(content)
             logger.info(f"Successfully worte to file: {filepath}")
         except IOError as e:
@@ -36,6 +59,16 @@ class FileHandler:
             logger.info(f"Successfully appended to file: {filepath}")
         except IOError as e:
             logger.error(f"Error appending to file {filepath}: {e}")
+
+    @staticmethod
+    def append_binary(filepath: str, content: str):
+        try:
+            with open(filepath, "ab") as f:
+                f.write(content)
+            logger.info(f"Successfully appended to file: {filepath}")
+        except IOError as e:
+            logger.error(f"Error appending to file {filepath}: {e}")
+            return None
 
     @staticmethod
     def ensure_directory_exists(directory):
