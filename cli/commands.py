@@ -8,6 +8,7 @@ from questgit.objects import ObjectStore
 from utils.hash_utils import HashCalculate
 from utils.logger_utils import LoggerUtil
 from questgit.config import Config
+from questgit.commit import Commit
 
 logger = LoggerUtil.setup_logger(__name__)
 
@@ -21,6 +22,7 @@ class CLIHandler:
             "restore": self.restore_staged,
             "unstage": self.unstage,
             "config": self.config,
+            "commit": self.commit,
         }
 
     def run(self):
@@ -219,6 +221,24 @@ class CLIHandler:
 
         Config.set(sys.argv[2], sys.argv[3])
         print(f"Set {sys.argv[2]}={sys.argv[3]}")
+
+    # For commit command
+    def commit(self):
+        if not self.validate_config():
+            return
+
+        args = sys.argv[2:]
+        if "-m" not in args or len(args) < 2:
+            print('Usage: questgit commit -m "commit message"')
+            return
+
+        message = args[args.index("-m") + 1]
+        commit_hash = Commit.create_commit(message)
+
+        if commit_hash:
+            print(f"Committed {commit_hash[:8]}: {message}")
+        else:
+            print("Commit failed (no changes staged?)")
 
     def show_usage(self):
         print("Usage: questgit <command>")
