@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import Optional, Dict
 
 from utils.logger_utils import LoggerUtil
 
@@ -85,3 +85,22 @@ class FileHandler:
             logger.info(f"File ensured: {filepath}")
         except IOError as e:
             logger.error(f"Error ensuring file {filepath}: {e}")
+    
+    @staticmethod
+    def read_config(filepath: str) -> Dict[str, str]:
+        content = FileHandler.read(filepath)
+        if not content:
+            return {}
+        
+        config = {}
+        for line in content.splitlines():
+            if "=" in line:
+                key, val = line.split("=", 1)
+                config[key.strip()] = val.strip()
+        return config
+
+    @staticmethod
+    def write_config(filepath: str, config: Dict[str, str]):
+        content = "\n".join(f"{key}={val}" for key, val in config.items())
+        FileHandler.write(filepath, content)
+
