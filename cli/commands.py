@@ -7,6 +7,7 @@ from utils.file_utils import FileHandler
 from questgit.objects import ObjectStore
 from utils.hash_utils import HashCalculate
 from utils.logger_utils import LoggerUtil
+from questgit.config import Config
 
 logger = LoggerUtil.setup_logger(__name__)
 
@@ -19,6 +20,7 @@ class CLIHandler:
             "status": self.show_status,
             "restore": self.restore_staged,
             "unstage": self.unstage,
+            "config": self.config,
         }
 
     def run(self):
@@ -35,9 +37,11 @@ class CLIHandler:
             print(f"Unknown command: {command}")
             self.show_usage()
 
+    # For Init command
     def init_repo(self):
         Repository.init()
 
+    # For add command
     def add_files(self):
         if not Repository.is_initialized():
             print("Not a questgit repository")
@@ -93,6 +97,7 @@ class CLIHandler:
         else:
             print("Nothing to stage")
 
+    # For status command
     def show_status(self):
         if not Repository.is_initialized():
             print("Not a questgit repository")
@@ -115,6 +120,7 @@ class CLIHandler:
         for file in sorted(all_files - tracked_files):
             print(f"\033[91m  untracked: {file}\033[0m")
 
+    # For Restore command from staging area
     def restore_staged(self):
         if not Repository.is_initialized():
             print("Not a questgit repository")
@@ -153,6 +159,7 @@ class CLIHandler:
         else:
             print("No files restored")
 
+    # For unstage command from staging area
     def unstage(self):
         if not Repository.is_initialized():
             print("Not a questgit repository")
@@ -186,13 +193,42 @@ class CLIHandler:
         else:
             print("No files removed from staging area")
 
+    # For config command
+    def validate_config(self):
+        if not Config.validate_required():
+            print("Error: Missing user configuration. Run:")
+            print('  questgit config user.name "Your Name"')
+            print('  questgit config user.email "your@email.com"')
+            return False
+        return True
+
+    def config(self):
+
+        if len(sys.argv) < 3:
+            print("Usage: questgit config <key> <value>")
+            print("       questgit config --check")
+            return
+
+        if sys.argv[2] == "--check":
+            self.validate_config()
+            return
+
+        if len(sys.argv) != 4:
+            print("Usage: questgit config <key> <value>")
+            return
+
+        Config.set(sys.argv[2], sys.argv[3])
+        print(f"Set {sys.argv[2]}={sys.argv[3]}")
+
     def show_usage(self):
         print("Usage: questgit <command>")
         print("Available commands:")
         # for cmd in self.commands.keys():
         #     print(f"  - {cmd}")
-        print("  init       - Initialize new repository")
+        print("  init       - Initialize a new repository")
+        print("  config     - Configure user settings")
         print("  add        - Add files to staging area")
-        print("  status     - Show staging status")
-        print("  restore    - Restore files from staging area")
+        print("  status     - Show staged/unstaged changes")
+        print("  restore    - Restore files from staging to working directory")
         print("  unstage    - Remove files from staging area")
+        print("  commit     - Record changes to the repository")

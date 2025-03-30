@@ -11,6 +11,7 @@ from utils.constants import (
     REQUIRED_DIRS,
 )
 from utils.file_utils import FileHandler
+from questgit.config import Config
 
 # from pathlib import Path
 
@@ -55,6 +56,8 @@ class Repository:
             # with open(cls.MASTER_FILE, "w") as m_data:
             #     m_data.write("")
             FileHandler.write(MASTER_FILE, "")
+
+            Config.prompt_setup()
 
             # os.rename(cls.TEMP_GIT_DIR, cls.GIT_DIR)
             logger.info("Initialized empty questgit repository")
