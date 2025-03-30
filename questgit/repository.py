@@ -20,29 +20,15 @@ logger = LoggerUtil.setup_logger(__name__)
 
 class Repository:
 
-    # GIT_DIR = Path(".questgit")
-    # OBJECTS_DIR = GIT_DIR / "objects"
-    # REFS_DIR = GIT_DIR / "refs"
-    # INDEX_FILE = GIT_DIR / "index"
-    # HEAD_FILE = REFS_DIR / "HEAD"
-    # MASTER_FILE = REFS_DIR / "master"
-
-    # @classmethod
-    # def init(cls):
-
-    #     cls.OBJECTS_DIR.mkdir(parents=True, exist_ok=True)
-    #     cls.REFS_DIR.mkdir(parents=True, exist_ok=True)
-    #     cls.INDEX_FILE.touch()
-
-    #     cls.HEAD_FILE.write_text("ref: refs/master\n")
-    # GIT_DIR = ".questgit"
-    # TEMP_GIT_DIR = ".temp-questgit"
-    # OBJECTS_DIR = os.path.join(TEMP_GIT_DIR, "objects")
-    # REFS_DIR = os.path.join(TEMP_GIT_DIR, "refs")
-    # HEADS_DIR = os.path.join(REFS_DIR, "heads")
-    # INDEX_FILE = os.path.join(TEMP_GIT_DIR, "index")
-    # HEAD_FILE = os.path.join(TEMP_GIT_DIR, "HEAD")
-    # MASTER_FILE = os.path.join(HEADS_DIR, "master")
+    IGNORED_DIRS = {
+        ".venv",
+        "__pycache__",
+        ".git",
+        GIT_DIR,
+        "questgit.egg-info",
+        ".idea",
+        ".vscode",
+    }
 
     @classmethod
     def init(cls):
@@ -95,10 +81,10 @@ class Repository:
     def get_relative_path(filepath: str, working_dir: str) -> str:
         return os.path.relpath(filepath, working_dir)
 
-    @staticmethod
-    def find_files(path: str = ".", ignore_dirs: List[str] = None) -> List[str]:
+    @classmethod
+    def find_files(cls, path: str = ".", ignore_dirs: List[str] = None) -> List[str]:
         if ignore_dirs is None:
-            ignore_dirs = [GIT_DIR]
+            ignore_dirs = cls.IGNORED_DIRS
 
         files = []
         for root, dirs, filenames in os.walk(path):
