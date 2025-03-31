@@ -47,6 +47,7 @@ class Commit:
 
             config = FileHandler.read_config(Config.CONFIG_PATH)
             author = config.get("user.name", "Anonymous")
+            email = config.get("user.email", "Anonymous")
 
             tree_hash = Commit._create_tree_object()
 
@@ -58,8 +59,8 @@ class Commit:
             commit_content = (
                 f"tree {tree_hash}\n"
                 + (f"parent {parent_hash}\n" if parent_hash else "")
-                + f"author {author} {timestamp}\n"
-                + f"committer {author} {timestamp}\n\n"  # Extra newline before the commit message
+                + f"author {author} <{email}> {timestamp}\n"
+                + f"committer {author} <{email}> {timestamp}\n\n"
                 + f"{message}\n"
             )
             commit_hash = Commit._store_object(commit_content)
