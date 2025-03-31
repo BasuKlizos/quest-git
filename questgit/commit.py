@@ -74,7 +74,13 @@ class Commit:
             commit_hash = Commit._store_object(commit_content)
 
             FileHandler.write(MASTER_FILE, commit_hash)
-            index.clear()
+
+            # Only remove if file matches current state
+            for file in list(index.entries.keys()):
+                current_hash = HashCalculate.calculate_sha1(FileHandler.read(file))
+                if current_hash == index.entries[file]:
+                    index.remove_entry(file)
+
             index.save()
 
             logger.info(f"Created commit {commit_hash[:8]}")

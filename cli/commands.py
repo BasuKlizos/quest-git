@@ -131,35 +131,50 @@ class CLIHandler:
 
         index = Index()
         working_dir = Repository.get_working_dir()
-
-        # Get all files in working directory (relative paths)
         all_files = {
             Repository.get_relative_path(f, working_dir)
             for f in Repository.find_files()
         }
 
-        # Tracked files = currently staged in index
-        tracked_files = set(index.entries.keys())
-
-        # Previously committed files (from last commit's tree)
+        # Get last commit's files
         last_commit_files = set()
         if os.path.exists(MASTER_FILE):
             last_commit_hash = FileHandler.read(MASTER_FILE).strip()
             if last_commit_hash:
                 last_commit_files = self._get_files_from_commit(last_commit_hash)
 
-        print("Changes to be committed:")
-        # Show files staged in index (new/changed since last commit)
-        for file in sorted(tracked_files):
-            if file in last_commit_files:
-                print(f"\033[92m  modified: {file}\033[0m")  # Changed since last commit
+        # Categorize files properly
+        staged_files = set(index.entries.keys())
+        working_changes = set()
+        untracked_files = set()
+
+        for file in all_files:
+            # Files in index but different from working dir
+            if file in index.entries:
+                current_hash = HashCalculate.calculate_sha1(FileHandler.read(file))
+                if current_hash != index.entries[file]:
+                    working_changes.add(file)
+            # Tracked in last commit but not in index
+            elif file in last_commit_files:
+                working_changes.add(file)
+            # Completely new files
             else:
-                print(f"\033[92m  new file: {file}\033[0m")  # Never committed before
+                untracked_files.add(file)
+
+        print("Changes to be committed:")
+        for file in sorted(staged_files):
+            if file in last_commit_files:
+                print(f"\033[92m  modified: {file}\033[0m")
+            else:
+                print(f"\033[92m  new file: {file}\033[0m")
+
+        print("\nChanges not staged for commit:")
+        for file in sorted(working_changes):
+            print(f"\033[91m  modified: {file}\033[0m")
 
         print("\nUntracked files:")
-        # Show files not staged at all
-        for file in sorted(all_files - tracked_files):
-            print(f"\033[91m  untracked: {file}\033[0m")
+        for file in sorted(untracked_files):
+            print(f"\033[91m  {file}\033[0m")
 
         # print("\nDeleted files:")
         # # Show files committed before but now missing
