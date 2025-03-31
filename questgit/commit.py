@@ -56,11 +56,11 @@ class Commit:
 
             timestamp = int(datetime.now().timestamp())
             commit_content = (
-                f"tree {tree_hash}"
-                f"{f'parent {parent_hash}' if parent_hash else ''}"
-                f"author {author} {timestamp}"
-                f"committer {author} {timestamp}"
-                f"{message}"
+                f"tree {tree_hash}\n"
+                + (f"parent {parent_hash}\n" if parent_hash else "")
+                + f"author {author} {timestamp}\n"
+                + f"committer {author} {timestamp}\n\n"  # Extra newline before the commit message
+                + f"{message}\n"
             )
             commit_hash = Commit._store_object(commit_content)
 
