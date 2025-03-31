@@ -47,6 +47,22 @@ class ObjectStore:
             return None
 
     @staticmethod
+    def write_blob(content: str, obj_type: str = "blob") -> str:
+        header = f"{obj_type} {len(content)}\0"
+        full_content = header.encode() + content.encode()
+
+        # Calculate hash and store
+        blob_hash = HashCalculate.calculate_sha1(full_content)
+        obj_dir = os.path.join(OBJECTS_DIR, blob_hash[:BLOB_DIR_LEN])
+        obj_path = os.path.join(obj_dir, blob_hash[BLOB_DIR_LEN:BLOB_HASH_LEN])
+
+        FileHandler.ensure_directory_exists(obj_dir)
+        compressed = zlib.compress(full_content)
+        FileHandler.write_binary(obj_path, compressed)
+
+        return blob_hash
+
+    @staticmethod
     def blob_exists(blob_hash: str) -> bool:
         obj_dir = os.path.join(OBJECTS_DIR, blob_hash[:BLOB_DIR_LEN])
         obj_path = os.path.join(obj_dir, blob_hash[BLOB_DIR_LEN:BLOB_HASH_LEN])

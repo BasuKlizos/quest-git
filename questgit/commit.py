@@ -1,7 +1,8 @@
 import os
 import zlib
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
+
 from utils.file_utils import FileHandler
 from utils.hash_utils import HashCalculate
 from utils.constants import (
@@ -22,6 +23,17 @@ index = Index()
 
 
 class Commit:
+
+    IGNORED_DIRS = {
+        ".venv",
+        "__pycache__",
+        ".git",
+        GIT_DIR,
+        "questgit.egg-info",
+        ".idea",
+        ".vscode",
+    }
+
     @staticmethod
     def _store_object(content: str) -> str:
         obj_hash = HashCalculate.calculate_sha1(content)
@@ -33,12 +45,42 @@ class Commit:
         return obj_hash
 
     @staticmethod
-    def _create_tree_object() -> str:
-        tree_entries = []
-        for filepath, blob_hash in index.entries.items():
-            filename = os.path.basename(filepath)
-            tree_entries.append(f"100644 blob {blob_hash} {filename}")
-        return Commit._store_object("\n".join(tree_entries))
+    def _create_tree_object(directory: str = ".", ignore_dirs: List[str] = None) -> str:
+        if ignore_dirs is None:
+            ignore_dirs = Commit.IGNORED_DIRS
+
+        entries = []
+        for item in sorted(os.listdir(directory)):
+            full_path = os.path.join(directory, item)
+            relative_path = os.path.relpath(full_path)
+
+            if os.path.isdir(full_path):
+                if item in ignore_dirs:
+                    continue
+
+                # Recursively create tree for subdirectory
+                subtree_hash = Commit._create_tree_object(full_path)
+                entries.append(f"040000 tree {subtree_hash}    {item}")
+            else:
+                # Create blob for file
+                with open(full_path, "rb") as f:
+                    content = f.read()
+                # content = FileHandler.read_binary(full_path)
+                # print("tree===========", content)
+                blob_hash = HashCalculate.calculate_sha1(content)
+                ObjectStore.store_blob(content)
+                entries.append(f"100644 blob {blob_hash}    {item}")
+
+        tree_content = "\n".join(entries)
+        tree_hash = HashCalculate.calculate_sha1(tree_content)
+        ObjectStore.write_blob(tree_content, obj_type="tree")
+
+        return tree_hash
+
+        # for filepath, blob_hash in index.entries.items():
+        #     filename = os.path.basename(filepath)
+        #     tree_entries.append(f"100644 blob {blob_hash} {filename}")
+        # return Commit._store_object("\n".join(tree_entries))
 
     @staticmethod
     def create_commit(message: str) -> Optional[str]:
@@ -71,7 +113,8 @@ class Commit:
                 + f"committer {author} <{email}> {timestamp}\n\n"
                 + f"{message}\n"
             )
-            commit_hash = Commit._store_object(commit_content)
+            # commit_hash = Commit._store_object(commit_content)
+            commit_hash = ObjectStore.write_blob(commit_content, "commit")
 
             FileHandler.write(MASTER_FILE, commit_hash)
 
