@@ -23,6 +23,7 @@ class CLIHandler:
             "status": self.show_status,
             "restore": self.restore_staged,
             "unstage": self.unstage,
+            "cat-file": self.cat_file_command,
             "config": self.config,
             "commit": self.commit,
         }
@@ -252,6 +253,18 @@ class CLIHandler:
             print(f"Removed {removed_files} file(s) from staging area")
         else:
             print("No files removed from staging area")
+
+    # For cat-file command
+    def cat_file_command(self):
+        if len(sys.argv) != 4 or sys.argv[2] != "-p":
+            print("Usage: questgit cat-file -p <blob_hash>")
+            return
+
+        obj_hash = sys.argv[3]
+        content = ObjectStore.read_blob(obj_hash)
+
+        if content:
+            print(content, end="\n")
 
     # For config command
     def validate_config(self):

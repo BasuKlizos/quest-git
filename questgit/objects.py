@@ -37,6 +37,7 @@ class ObjectStore:
 
         compressed_content = FileHandler.read_binary(obj_path)
         if compressed_content is None:
+            logger.error(f"Blob object not found: {blob_hash}")
             return None
 
         try:

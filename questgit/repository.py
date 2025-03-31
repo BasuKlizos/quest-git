@@ -91,7 +91,7 @@ class Repository:
 
         files = []
         for root, dirs, filenames in os.walk(path):
-            # Skip ignored directories
+            # Skip ignored directoriess
             dirs[:] = [d for d in dirs if d not in ignore_dirs]
 
             for filename in filenames:
