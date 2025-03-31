@@ -18,6 +18,8 @@ from .config import Config
 
 logger = LoggerUtil.setup_logger(__name__)
 
+index = Index()
+
 
 class Commit:
     @staticmethod
@@ -33,7 +35,7 @@ class Commit:
     @staticmethod
     def _create_tree_object() -> str:
         tree_entries = []
-        for filepath, blob_hash in Index().entries.items():
+        for filepath, blob_hash in index.entries.items():
             filename = os.path.basename(filepath)
             tree_entries.append(f"100644 blob {blob_hash} {filename}")
         return Commit._store_object("\n".join(tree_entries))
@@ -41,7 +43,8 @@ class Commit:
     @staticmethod
     def create_commit(message: str) -> Optional[str]:
         try:
-            if not Index().entries:
+
+            if not index.entries:
                 logger.error("Nothing to commit (index is empty)")
                 return None
 
@@ -50,10 +53,15 @@ class Commit:
             email = config.get("user.email", "Anonymous")
 
             tree_hash = Commit._create_tree_object()
+            if not tree_hash:
+                logger.error("Failed to create tree object")
+                return None
 
             parent_hash = None
             if os.path.exists(MASTER_FILE):
                 parent_hash = FileHandler.read(MASTER_FILE).strip()
+                if not parent_hash or not ObjectStore.blob_exists(parent_hash):
+                    parent_hash = None
 
             timestamp = int(datetime.now().timestamp())
             commit_content = (
@@ -66,8 +74,8 @@ class Commit:
             commit_hash = Commit._store_object(commit_content)
 
             FileHandler.write(MASTER_FILE, commit_hash)
-            Index().entries = {}
-            Index().save()
+            index.clear()
+            index.save()
 
             logger.info(f"Created commit {commit_hash[:8]}")
             return commit_hash

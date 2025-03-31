@@ -161,10 +161,10 @@ class CLIHandler:
         for file in sorted(all_files - tracked_files):
             print(f"\033[91m  untracked: {file}\033[0m")
 
-        print("\nDeleted files:")
-        # Show files committed before but now missing
-        for file in sorted(last_commit_files - all_files):
-            print(f"\033[93m  deleted: {file}\033[0m")
+        # print("\nDeleted files:")
+        # # Show files committed before but now missing
+        # for file in sorted(last_commit_files - all_files):
+        #     print(f"\033[93m  deleted: {file}\033[0m")
 
     def _get_files_from_commit(self, commit_hash: str) -> set:
         commit = ObjectStore.read_blob(commit_hash)
@@ -295,6 +295,10 @@ class CLIHandler:
 
     # For commit command
     def commit(self):
+        if not Repository.is_initialized():
+            print("Not a questgit repository")
+            return
+
         if not self.validate_config():
             return
 
