@@ -50,37 +50,72 @@ class Commit:
             ignore_dirs = Commit.IGNORED_DIRS
 
         entries = []
-        for item in sorted(os.listdir(directory)):
-            full_path = os.path.join(directory, item)
-            relative_path = os.path.relpath(full_path)
 
-            if os.path.isdir(full_path):
-                if item in ignore_dirs:
+        # Process files in the index (already staged files)
+        for filepath, blob_hash in list(index.entries.items()):
+            try:
+                # Verify file still exists
+                if not os.path.exists(filepath):
+                    logger.warning(f"File not found, removing from index: {filepath}")
+                    index.remove_entry(filepath)
                     continue
 
-                # Recursively create tree for subdirectory
-                subtree_hash = Commit._create_tree_object(full_path)
-                entries.append(f"040000 tree {subtree_hash}    {item}")
-            else:
-                # Create blob for file
-                with open(full_path, "rb") as f:
-                    content = f.read()
-                # content = FileHandler.read_binary(full_path)
-                # print("tree===========", content)
-                blob_hash = HashCalculate.calculate_sha1(content)
-                ObjectStore.store_blob(content)
-                entries.append(f"100644 blob {blob_hash}    {item}")
+                # Read file content
+                # print("=================read==================")
+                content = FileHandler.read(filepath)
+                if content is None:
+                    continue
+                # print("=============", content)
+
+                # Verify content hasn't changed since staging
+                current_hash = HashCalculate.calculate_sha1(content)
+                if current_hash != blob_hash:
+                    # print("=================Hash==================")
+                    logger.warning(f"File modified since staging: {filepath}")
+                    continue
+
+                # Add to tree entries
+                filename = os.path.basename(filepath)
+                dirname = os.path.dirname(filepath)
+                # print("=========", filename,"\n===========", dirname,"\n==============", directory)
+
+                # Handle nested directory structure
+                if dirname and dirname != directory:
+                    # This will create subtrees automatically through recursion
+                    continue
+
+                entries.append(f"100644 blob {blob_hash}    {filename}")
+                # print("=========", entries)
+
+            except Exception as e:
+                logger.error(f"Error processing {filepath}: {e}")
+                continue
+
+        # Process directories (for nested structure)
+        for item in sorted(os.listdir(directory)):
+            if item in ignore_dirs:
+                continue
+
+            full_path = os.path.join(directory, item)
+            # print("=====", full_path)
+            if os.path.isdir(full_path):
+                # Recursively create subtree
+                # print("============", entries)
+                try:
+                    subtree_hash = Commit._create_tree_object(full_path, ignore_dirs)
+                    entries.append(f"040000 tree {subtree_hash}    {item}")
+                except Exception as e:
+                    logger.error(f"Error processing directory {full_path}: {e}")
+                    print(f"Error processing directory {full_path}: {e}")
+                    continue
+
+        print("============", entries)
+                
+        if not entries:
+            raise ValueError(f"No valid files to commit in {directory}")
 
         tree_content = "\n".join(entries)
-        tree_hash = HashCalculate.calculate_sha1(tree_content)
-        ObjectStore.write_blob(tree_content, obj_type="tree")
-
-        return tree_hash
-
-        # for filepath, blob_hash in index.entries.items():
-        #     filename = os.path.basename(filepath)
-        #     tree_entries.append(f"100644 blob {blob_hash} {filename}")
-        # return Commit._store_object("\n".join(tree_entries))
+        return ObjectStore.store_tree(tree_content)
 
     @staticmethod
     def create_commit(message: str) -> Optional[str]:
@@ -94,9 +129,11 @@ class Commit:
             author = config.get("user.name", "Anonymous")
             email = config.get("user.email", "Anonymous")
 
-            tree_hash = Commit._create_tree_object()
-            if not tree_hash:
-                logger.error("Failed to create tree object")
+            try:
+                # print("======tree_hash===============")
+                tree_hash = Commit._create_tree_object()
+            except ValueError as e:
+                logger.error(str(e))
                 return None
 
             parent_hash = None

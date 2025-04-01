@@ -61,6 +61,27 @@ class ObjectStore:
         FileHandler.write_binary(obj_path, compressed)
 
         return blob_hash
+    
+    @staticmethod
+    def store_tree(tree_content: str) -> str:
+        header = f"tree {len(tree_content)}\0"
+        full_content = header + tree_content
+        
+        # Calculate hash (needs to be on the encoded bytes)
+        full_content_bytes = full_content.encode('utf-8')
+        tree_hash = HashCalculate.calculate_sha1(full_content_bytes)
+        
+        # Prepare storage path
+        obj_dir = os.path.join(OBJECTS_DIR, tree_hash[:BLOB_DIR_LEN])
+        obj_path = os.path.join(obj_dir, tree_hash[BLOB_DIR_LEN:BLOB_HASH_LEN])
+        
+        # Store compressed content
+        FileHandler.ensure_directory_exists(obj_dir)
+        FileHandler.write_binary(obj_path, zlib.compress(full_content_bytes))
+        
+        logger.info(f"Stored tree {tree_hash}")
+        return tree_hash
+
 
     @staticmethod
     def blob_exists(blob_hash: str) -> bool:

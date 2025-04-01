@@ -310,6 +310,7 @@ class CLIHandler:
 
     # For commit command
     def commit(self):
+        index = Index()
         if not Repository.is_initialized():
             print("Not a questgit repository")
             return
@@ -323,6 +324,15 @@ class CLIHandler:
             return
 
         message = args[args.index("-m") + 1]
+        
+        missing_files = [f for f in index.entries.keys() if not os.path.exists(f)]
+        if missing_files:
+            print("Error: Missing files:")
+            for f in missing_files:
+                print(f"  - {f}")
+            print("Use 'questgit add' to re-stage files")
+            return
+        
         commit_hash = Commit.create_commit(message)
 
         if commit_hash:
