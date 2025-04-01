@@ -159,11 +159,11 @@ class CLIHandler:
                 current_hash = HashCalculate.calculate_sha1(FileHandler.read(file))
                 if current_hash != index.entries[file]:
                     working_changes.add(file)
-            
+
             # elif file not in last_commit_files:
             #     return
             # Tracked in last commit but not in index
-            
+
             elif file in last_commit_files:
                 working_changes.add(file)
             # Completely new files
@@ -198,10 +198,10 @@ class CLIHandler:
         # Get tree hash from commit (first line: "tree <hash>")
         tree_hash = commit.split("\n")[0].split()[1]
         tree = ObjectStore.read_blob(tree_hash)
-        
+
         if tree is None:
             return
-        
+
         return {
             line.split()[-1]  # Extract filename
             for line in tree.split("\n")

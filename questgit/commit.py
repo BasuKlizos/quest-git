@@ -228,7 +228,7 @@ class Commit:
                 timestamp = int(author_parts[-1])
                 commit["date"] = datetime.fromtimestamp(timestamp)
             elif not line and "message" not in commit:
-                commit["message"] = "\n".join(lines[lines.index("") + 1 :])
+                commit["message"] = "\n".join(lines[lines.index("") + 1:])
                 break
 
         return commit
