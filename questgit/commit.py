@@ -97,20 +97,22 @@ class Commit:
                 continue
 
             full_path = os.path.join(directory, item)
-            # print("=====", full_path)
+            # print("=====full_path===", full_path)
+            # print("=====full_path===", type(full_path))
             if os.path.isdir(full_path):
                 # Recursively create subtree
                 # print("============", entries)
                 try:
                     subtree_hash = Commit._create_tree_object(full_path, ignore_dirs)
+                    # print("----------subtree-----------",subtree_hash)
                     entries.append(f"040000 tree {subtree_hash}    {item}")
                 except Exception as e:
                     logger.error(f"Error processing directory {full_path}: {e}")
                     print(f"Error processing directory {full_path}: {e}")
                     continue
 
-        print("============", entries)
-                
+        # print("=======entries=====", entries)
+
         if not entries:
             raise ValueError(f"No valid files to commit in {directory}")
 
@@ -130,17 +132,22 @@ class Commit:
             email = config.get("user.email", "Anonymous")
 
             try:
-                # print("======tree_hash===============")
                 tree_hash = Commit._create_tree_object()
+                print("======tree_hash===============", tree_hash)
             except ValueError as e:
                 logger.error(str(e))
                 return None
 
             parent_hash = None
             if os.path.exists(MASTER_FILE):
+                print("=======master=========", MASTER_FILE)
                 parent_hash = FileHandler.read(MASTER_FILE).strip()
-                if not parent_hash or not ObjectStore.blob_exists(parent_hash):
-                    parent_hash = None
+                # print("=======parent=========", parent_hash)
+                # if not parent_hash or not ObjectStore.blob_exists(parent_hash):
+                #     parent_hash = None
+            else:
+                logger.info("MASTER_FILE not found, treating as first commit.")
+                parent_hash = None
 
             timestamp = int(datetime.now().timestamp())
             commit_content = (
@@ -152,8 +159,14 @@ class Commit:
             )
             # commit_hash = Commit._store_object(commit_content)
             commit_hash = ObjectStore.write_blob(commit_content, "commit")
+            print("==========commit_hash==========", commit_hash)
 
-            FileHandler.write(MASTER_FILE, commit_hash)
+            # FileHandler.write(MASTER_FILE, commit_hash)
+            if commit_hash:
+                FileHandler.write(MASTER_FILE, commit_hash)
+                logger.info(f"Updated MASTER_FILE with new commit hash: {commit_hash}")
+            else:
+                logger.error("Commit hash generation failed, MASTER_FILE not updated.")
 
             # Only remove if file matches current state
             for file in list(index.entries.keys()):

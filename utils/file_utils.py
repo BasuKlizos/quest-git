@@ -14,8 +14,12 @@ class FileHandler:
         if not os.path.isfile(filepath):
             logger.warning(f"File not found: {filepath}")
             return None
+        # with open(filepath, "r", encoding="utf-8") as f:
+        #         # print(".................",f.read())
+        #         return f.read()
         try:
             with open(filepath, "r", encoding="utf-8") as f:
+                # print(".................",f.read())
                 return f.read()
         except IOError as e:
             logger.error(f"Error reading file {filepath} : {e}")
@@ -43,7 +47,7 @@ class FileHandler:
             logger.error(f"Error writing to file {filepath}: {e}")
 
     @staticmethod
-    def write_binary(filepath: str, content: str):
+    def write_binary(filepath: str, content: bytes):
         try:
             with open(filepath, "wb") as f:
                 f.write(content)
