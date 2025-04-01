@@ -51,10 +51,10 @@ class Index:
 
     def get_entry(self, filepath: str) -> Optional[str]:
         return self.entries.get(filepath)
-    
+
     def clear(self):
         self.entries = {}
-    
+
     def remove_entry(self, filepath: str):
         if filepath in self.entries:
             del self.entries[filepath]

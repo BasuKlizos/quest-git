@@ -1,7 +1,7 @@
 import os
 import zlib
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from utils.file_utils import FileHandler
 from utils.hash_utils import HashCalculate
@@ -11,6 +11,7 @@ from utils.constants import (
     BLOB_DIR_LEN,
     BLOB_HASH_LEN,
     GIT_DIR,
+    REFS_DIR,
 )
 from utils.logger_utils import LoggerUtil
 from .objects import ObjectStore
@@ -133,14 +134,14 @@ class Commit:
 
             try:
                 tree_hash = Commit._create_tree_object()
-                print("======tree_hash===============", tree_hash)
+                # print("======tree_hash===============", tree_hash)
             except ValueError as e:
                 logger.error(str(e))
                 return None
 
             parent_hash = None
             if os.path.exists(MASTER_FILE):
-                print("=======master=========", MASTER_FILE)
+                # print("=======master=========", MASTER_FILE)
                 parent_hash = FileHandler.read(MASTER_FILE).strip()
                 # print("=======parent=========", parent_hash)
                 # if not parent_hash or not ObjectStore.blob_exists(parent_hash):
@@ -159,7 +160,7 @@ class Commit:
             )
             # commit_hash = Commit._store_object(commit_content)
             commit_hash = ObjectStore.write_blob(commit_content, "commit")
-            print("==========commit_hash==========", commit_hash)
+            # print("==========commit_hash==========", commit_hash)
 
             # FileHandler.write(MASTER_FILE, commit_hash)
             if commit_hash:
@@ -182,3 +183,52 @@ class Commit:
         except Exception as e:
             logger.error(f"Commit failed: {str(e)}")
             return None
+
+    # For log history
+    @staticmethod
+    def get_log(ref: str = "master", max_count: int = 10) -> List[Dict]:
+        commits = []
+        current_hash = Commit._resolve_ref(ref)
+
+        while current_hash and len(commits) < max_count:
+            commit = Commit._parse_commit(current_hash)
+            if not commit:
+                break
+
+            commits.append(commit)
+            current_hash = commit.get("parent")
+
+        return commits
+
+    @staticmethod
+    def _resolve_ref(ref: str) -> Optional[str]:
+        ref_path = os.path.join(REFS_DIR, "heads", ref)
+        if os.path.exists(ref_path):
+            return FileHandler.read(ref_path).strip()
+        return ref if ObjectStore.blob_exists(ref) else None
+
+    @staticmethod
+    def _parse_commit(commit_hash: str) -> Optional[Dict]:
+        content = ObjectStore.read_blob(commit_hash)
+        if not content:
+            return None
+
+        commit = {"hash": commit_hash}
+        lines = content.split("\n")
+
+        for line in lines:
+            if line.startswith("tree "):
+                commit["tree"] = line[5:]
+            elif line.startswith("parent "):
+                commit["parent"] = line[7:]
+            elif line.startswith("author "):
+                author_parts = line[7:].split()
+                commit["author"] = " ".join(author_parts[:-2])
+                commit["email"] = author_parts[-2][1:-1]  # Remove <>
+                timestamp = int(author_parts[-1])
+                commit["date"] = datetime.fromtimestamp(timestamp)
+            elif not line and "message" not in commit:
+                commit["message"] = "\n".join(lines[lines.index("") + 1 :])
+                break
+
+        return commit

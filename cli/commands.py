@@ -26,6 +26,7 @@ class CLIHandler:
             "cat-file": self.cat_file_command,
             "config": self.config,
             "commit": self.commit,
+            "log": self.log_command,
         }
 
     def run(self):
@@ -335,7 +336,7 @@ class CLIHandler:
             return
 
         message = args[args.index("-m") + 1]
-        
+
         missing_files = [f for f in index.entries.keys() if not os.path.exists(f)]
         if missing_files:
             print("Error: Missing files:")
@@ -343,13 +344,32 @@ class CLIHandler:
                 print(f"  - {f}")
             print("Use 'questgit add' to re-stage files")
             return
-        
+
         commit_hash = Commit.create_commit(message)
 
         if commit_hash:
             print(f"Committed {commit_hash[:8]}: {message}")
         else:
             print("Commit failed (no changes staged?)")
+
+    def log_command(self):
+        if not Repository.is_initialized():
+            print("\033[91mNot a questgit repository\033[0m")
+            return
+
+        commits = Commit.get_log()
+
+        if not commits:
+            print("No commits yet")
+            return
+
+        for commit in commits:
+            print(f"\033[33mcommit {commit['hash']}\033[0m")
+            print(f"Author: {commit['author']} <{commit['email']}>")
+            print(f"Date:   {commit['date'].strftime('%a %b %d %H:%M:%S %Y %z')}")
+            print()
+            print(f"    {commit['message']}")
+            print()
 
     def show_usage(self):
         print("Usage: questgit <command>")
