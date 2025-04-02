@@ -383,3 +383,4 @@ class CLIHandler:
         print("  restore    - Restore files from staging to working directory")
         print("  unstage    - Remove files from staging area")
         print("  commit     - Record changes to the repository")
+        print("  log        - Display commit history")
